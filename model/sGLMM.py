@@ -115,6 +115,8 @@ class sGLMM:
             iteration += 1
             reg = np.exp((np.log(regMin)+np.log(regMax)) / 2.0)
             coef_=self.runLasso(X,Y, reg)
+            if betaM is None:
+                betaM=coef_
             k = len(np.where(coef_ != 0)[0])
             if not self.isQuiet: print "\tIter:%d\t   lambda:%.5f  non-zeroes:%d" % (iteration, reg, k)
             ss.append((reg, k))
