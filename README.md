@@ -8,7 +8,7 @@ Implementation of sGLMM in this paper:
 
 sGLMM is a state-of-art model that could extract the genetic variation efficiently from a confounded dataset.
 
-#File Structure:
+File Structure:
 
 * **models/** -   main method for sGLMM
 * **utility/** -  other helper files 
