@@ -58,6 +58,8 @@ def run(opt, outFile):
     xname = []
     for i in ind:
         xname.append(i)
+        
+    beta_model_lmm=beta_model_lmm.flatten()
 
 
     beta_name = zip(beta_model_lmm, Xname)
