@@ -58,16 +58,9 @@ class FileReader():
         print 'Imputation takes %.2fs' % (time_end - time_start)
         return X
 
-    def simpleImputation(self, X, Y):
+    def simpleImputation(self, X):
         X[np.isnan(X)] = 0
-        keep = []
-        for i in range(Y.shape[0]):
-            for j in range(Y.shape[1]):
-                if np.isnan(Y[i, j]): break
-            if (j + 1 == Y.shape[1]) and not (np.isnan(Y[i, j])): keep.append(i)
-        # keep = [1, 2, 3, 4]
-        return X, keep
-
+        return X
 
     def readFiles(self):
         print 'Reading Data ...'
@@ -96,11 +89,12 @@ class FileReader():
 
         if self.imputationFlag:
             X = self.imputation(X)
-            keep = True - np.isnan(y)
-            return X[keep,:], y[keep], Xname
         else:
-            X, keep = self.simpleImputation(X, y)
-            return X[keep, :], y[keep], Xname[keep]
+            X = self.simpleImputation(X)
+
+        y[np.isnan(y)] = y.mean()
+        return X, y, Xname
+
 
 if __name__ == '__main__':
     fr = FileReader(fileName='../data/snps.132k')

@@ -10,7 +10,8 @@ sGLMM is a state-of-art model that could extract the genetic variation efficient
 
 File Structure:
 
-* **models/** -   main method for sGLMM
+* **data/** - data, we include one simulated sample csv data (1000 samples, 5000 SNPs and 50 traits) and a PLINK data
+* **models/** - main method for sGLMM
 * **utility/** -  other helper files 
 * **runsGLMM.py**  -  main entry point of using sGLMM to work with your own data
 
@@ -21,7 +22,13 @@ File Structure:
 ```
 python runsGLMM.py --snum=50 -n data/mice.plink
 ```
-this command will run the program and specify the the number of relevant SNPs that the model selects to 50. 
+this command will run the program and specify the the number of relevant SNPs that the model selects to 50.
+
+```
+python2 runsGLMM.py -n data/simulation --lambda=1 -t csv -m
+```
+This command specify the lambda to 1 and run the model once. its input data is csv file in data/ named "simulation". It use simple imputation 
+
 
 Options:
 
@@ -42,6 +49,7 @@ Options:
 
 * sGLMM currently supports CSV and binary PLINK files.
 * Extensions to other data format can be easily implemented through `FileReader` in `utility/dataLoadear`. Feel free to contact us for the support of other data format.
+* in the 
 
 ## Installation
 First, you need to download this repository by using :
