@@ -10,7 +10,7 @@ sGLMM is a state-of-art model that could extract the genetic variation efficient
 
 File Structure:
 
-* **data/** - data, we include one simulated sample csv data (1000 samples, 5000 SNPs and 50 traits) and a PLINK data
+* **data/** - we include one simulated sample csv data (500 samples, 2500 SNPs and 25 traits) and a PLINK data
 * **models/** - main method for sGLMM
 * **utility/** -  other helper files 
 * **runsGLMM.py**  -  main entry point of using sGLMM to work with your own data
