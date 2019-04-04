@@ -47,7 +47,6 @@ def run(opt, outFile):
     reader = FileReader(fileName=opt.fileName, fileType=opt.fileType, imputation=(not opt.missing))
     snps, Y, Xname = reader.readFiles()
     print "SNP shape: {} Y shape: {}".format(snps.shape, Y.shape)
-    print Xname
     K = np.dot(snps, snps.T)
 
     # Run
