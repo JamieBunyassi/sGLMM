@@ -19,6 +19,17 @@ def output_result(out, rank, id, beta):
     out.write("\t".join([str(x) for x in [rank, id, beta]]) + "\n")
 
 
+def KFold(X,y,k=5):
+    foldsize = int(X.shape[0]/k)
+    for idx in range(k):
+        testlst = range(idx*foldsize,idx*foldsize+foldsize)
+        Xtrain = np.delete(X,testlst,0)
+        ytrain = np.delete(y,testlst,0)
+        Xtest = X[testlst]
+        ytest = y[testlst]
+        yield Xtrain, ytrain, Xtest, ytest
+
+
 def run(opt, outFile):
     discoverNum = opt.snum
     numintervals = 500
@@ -29,23 +40,18 @@ def run(opt, outFile):
     if (opt.lmbd is not None) and (opt.snum is not None):
         print 'Invalid options: lambda and snum cannot be set together.'
         exit(1)
-    if opt.lmbd is None:
-        lam = 0.7
-    else:
-        lam = float(opt.lmbd)
+
     cv_flag = ((opt.lmbd is None) and (opt.snum is None))
 
     # Get the input
     reader = FileReader(fileName=opt.fileName, fileType=opt.fileType, imputation=(not opt.missing))
     snps, Y, Xname = reader.readFiles()
+    print "SNP shape: {} Y shape: {}".format(snps.shape, Y.shape)
     K = np.dot(snps, snps.T)
-    # print snps.shape, Y.shape
-    # beta_model_lmm = np.zeros((snps.shape[1], Y.shape[1]))
 
     # Run
-
     slmm_model = sGLMM(discoverNum=discoverNum, ldeltamin=ldeltamin, ldeltamax=ldeltamax, learningRate=learningRate,
-                       numintervals=numintervals, lam=lam, threshold=opt.threshold, isQuiet=opt.quiet, cv_flag=cv_flag)
+                       numintervals=numintervals, lam=opt.lmbd, threshold=opt.threshold, isQuiet=opt.quiet)
     beta_model_lmm = slmm_model.train(X=snps, K=K, y=Y)
 
     # There is an error
@@ -60,7 +66,6 @@ def run(opt, outFile):
         xname.append(i)
         
     beta_model_lmm=beta_model_lmm.flatten()
-
 
     beta_name = zip(beta_model_lmm, Xname)
     bn = sorted(beta_name)
@@ -88,16 +93,15 @@ modelGroup = OptionGroup(parser, "Model Options")
 
 ## data options
 dataGroup.add_option("-t", dest='fileType', default='plink', help="choices of input file type")
-dataGroup.add_option("-n", dest='fileName', help="name of the input file")
+dataGroup.add_option("-n", dest='fileName', help="name of the input file (required)", )
 
 ## model options
-modelGroup.add_option("--lambda", dest="lmbd", default=None,
+modelGroup.add_option("--lambda", dest="lmbd", default=None, help="The weight of the penalizer. If neither lambda or snum is given, cross validation will be run.")
+modelGroup.add_option("--gamma", dest="gamma", default=0.7,
                       help="The weight of the penalizer. If neither lambda or snum is given, cross validation will be run.")
-# modelGroup.add_option("--gamma", dest="gamma", default=0.7,
-#                       help="The weight of the penalizer. If neither lambda or snum is given, cross validation will be run.")
 modelGroup.add_option("--snum", dest="snum", default=None,
                       help="the number of targeted variables the model selects. If neither lambda or snum is given, cross validation will be run.")
-modelGroup.add_option("--threshold", dest="threshold", default=0.618,
+modelGroup.add_option("--threshold", dest="threshold", default=0.6,
                       help="The threshold to mask the weak genotype relatedness")
 modelGroup.add_option('-q', action='store_true', dest='quiet', default=False, help='Run in quiet mode')
 modelGroup.add_option('-m', action='store_true', dest='missing', default=False,
@@ -109,7 +113,7 @@ parser.add_option_group(modelGroup)
 
 (options, args) = parser.parse_args()
 
-if len(args) != 0:
+if len(args) != 0 or not options.fileName:
     parser.print_help()
     sys.exit()
 
@@ -117,5 +121,3 @@ outFile = options.fileName + '.output'
 
 print 'Running ... '
 run(options, outFile)
-
-

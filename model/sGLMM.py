@@ -12,7 +12,7 @@ def normalize(x):
 
 class sGLMM:
     def __init__(self, numintervals=100, ldeltamin=-5, ldeltamax=5, discoverNum=None, scale=0, learningRate=1e-5,
-                 lam=1, reg_min=1e-7, reg_max=1e7, threshold=0.618, isQuiet=False, cv_flag=False):
+                 lam=None, reg_min=1e-7, reg_max=1e7, threshold=0.618, isQuiet=False):
         self.numintervals = numintervals
         self.ldeltamin = ldeltamin
         self.ldeltamax = ldeltamax
@@ -25,7 +25,6 @@ class sGLMM:
         self.reg_max = reg_max
         self.threshold = threshold
         self.isQuiet = isQuiet
-        self.cv_flag = cv_flag
         self.beta = None
 
     def cross_val_score(self, X, y, lam, cv=5):
@@ -39,7 +38,7 @@ class sGLMM:
             ytr = np.delete(y, ind, axis=0)
             Xte = X[ind, :]
             yte = y[ind]
-            self.beta = self.runLasso(X=Xtr, Y=ytr, lam_=lam)
+            self.beta = self.runLasso(X=Xtr, Y=ytr, lam=lam)
             ypr = self.predict(Xte)
             s = np.mean(np.square(ypr - yte))
             scores.append(s)
@@ -63,7 +62,7 @@ class sGLMM:
         return beta
 
     def train(self, X, K, y):
-        print 'Computing ...'
+        print 'LMM step...'
         Kva, Kve = np.linalg.eigh(K)
         time_start = time.time()
         [n_s, n_f] = X.shape
@@ -87,12 +86,12 @@ class sGLMM:
             SUy[:, i]=normalize(SUy[:, i])
         SUX = normalize(SUX)
 
-        if self.cv_flag:
-            self.beta=self.crossValidation(SUX, SUy)
-        elif self.discoverNum is not None:
-            self.beta = self.cv_train(X=SUX, Y=SUy, K=int(self.discoverNum)*y.shape[1])
+        if self.discoverNum is not None:
+            self.beta = self.cv_train(X=SUX, Y=SUy, K=self.discoverNum)
+        elif self.lam is not None:
+            self.beta = self.runLasso(SUX, SUy, lam=self.lam)
         else:
-            self.beta = self.runLasso(SUX, SUy, lam_=self.lam)
+            self.beta = self.crossValidation(SUX, SUy)
 
         time_end = time.time()
         time_diff = time_end - time_start
@@ -111,30 +110,37 @@ class sGLMM:
         time_diffs = []
         minFactor = 0.5
         maxFactor = 2
+        print "start training!"
+
         while regMin + 1e-5 < regMax and iteration < patience:
             iteration += 1
             reg = np.exp((np.log(regMin)+np.log(regMax)) / 2.0)
-            coef_=self.runLasso(X,Y, reg)
-            if betaM is None:
-                betaM=coef_
+            coef_ = self.runLasso(X,Y, reg)
+
+            # Calculate the number of non-zero params
             k = len(np.where(coef_ != 0)[0])
-            if not self.isQuiet: print "\tIter:%d\t   lambda:%.5f  non-zeroes:%d" % (iteration, reg, k)
+            print "iter: {} range: [{}, {}]".format(iteration, regMin, regMax)
+            print "lambda:%.5f non-zeroes:%d" % (reg, k)
             ss.append((reg, k))
+
+            # Update the range
             if k < K * minFactor:    # Regularizer too strong
-                if not self.isQuiet: print '\tRegularizer is too strong, shrink the lambda'
                 regMax = reg
             elif k > K * maxFactor:  # Regularizer too weak
-                if not self.isQuiet: print '\tRegularization is too weak, enlarge lambda'
                 regMin = reg
             else:
+                print "Find a good lambda, exit!"
                 betaM = coef_
                 break
-        time_diffs.append(time.time() - time_start)
-        time_start = time.time()
+
+        if betaM is None:
+            print 'No lambda satisfying the requirement'
+            exit(1)
+
+        print 'snum train takes ', time.time() - time_start, 's'
         return betaM
 
-
-    def runLasso(self, X, Y,lam_):
+    def runLasso(self, X, Y, lam_):
         pgd = ProximalGradientDescent(learningRate=self.learningRate * 2e4)
         model = GFlasso(lambda_flasso=lam_, gamma_flasso=0.7, mau=0.1)
 
