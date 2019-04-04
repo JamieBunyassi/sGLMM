@@ -12,19 +12,19 @@ from utility.dataLoader import FileReader
 sys.path.append('../')
 
 
-def print_out_head(out): out.write("\t".join(["RANK", "SNP_ID", "EFFECT_SIZE_ABS"]) + "\n")
+def print_out_head(out): out.write("\t".join(["RANK", "SNP_ID", "TRAITS", "EFFECT_SIZE_ABS"]) + "\n")
 
 
-def output_result(out, rank, id, beta):
-    out.write("\t".join([str(x) for x in [rank, id, beta]]) + "\n")
+def output_result(out, rank, id, yid, beta):
+    out.write("\t".join([str(x) for x in [rank, id, yid, beta]]) + "\n")
 
 
 def KFold(X,y,k=5):
     foldsize = int(X.shape[0]/k)
     for idx in range(k):
-        testlst = range(idx*foldsize,idx*foldsize+foldsize)
-        Xtrain = np.delete(X,testlst,0)
-        ytrain = np.delete(y,testlst,0)
+        testlst = range(idx*foldsize, idx*foldsize+foldsize)
+        Xtrain = np.delete(X, testlst, 0)
+        ytrain = np.delete(y, testlst, 0)
         Xtest = X[testlst]
         ytest = y[testlst]
         yield Xtrain, ytrain, Xtest, ytest
@@ -64,19 +64,13 @@ def run(opt, outFile):
     x_idx, y_idx = np.where(beta_model_lmm != 0)
     xname = []
     for i in x_idx:
-        xname.append(i)
-        
-    beta_model_lmm = beta_model_lmm.flatten()
-
-    beta_name = zip(beta_model_lmm, Xname)
-    bn = sorted(beta_name)
-    bn.reverse()
+        xname.append(Xname[i])
 
     out = open(outFile, 'w')
     print_out_head(out)
 
-    for i in range(len(bn)):
-        output_result(out, i + 1, bn[i][1], bn[i][0])
+    for i in range(len(x_idx)):
+        output_result(out, i + 1, xname[i], "y{}".format(y_idx[i]), abs(beta_model_lmm[x_idx[i]][y_idx[i]]))
 
     out.close()
 
