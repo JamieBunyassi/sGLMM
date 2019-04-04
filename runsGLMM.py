@@ -41,12 +41,13 @@ def run(opt, outFile):
         print 'Invalid options: lambda and snum cannot be set together.'
         exit(1)
 
-    cv_flag = ((opt.lmbd is None) and (opt.snum is None))
+    # cv_flag = ((opt.lmbd is None) and (opt.snum is None))
 
     # Get the input
     reader = FileReader(fileName=opt.fileName, fileType=opt.fileType, imputation=(not opt.missing))
     snps, Y, Xname = reader.readFiles()
     print "SNP shape: {} Y shape: {}".format(snps.shape, Y.shape)
+    print Xname
     K = np.dot(snps, snps.T)
 
     # Run
@@ -60,12 +61,12 @@ def run(opt, outFile):
         exit(1)
 
     # Output the result to the file
-    ind = np.where(beta_model_lmm != 0)[0]
+    x_idx, y_idx = np.where(beta_model_lmm != 0)
     xname = []
-    for i in ind:
+    for i in x_idx:
         xname.append(i)
         
-    beta_model_lmm=beta_model_lmm.flatten()
+    beta_model_lmm = beta_model_lmm.flatten()
 
     beta_name = zip(beta_model_lmm, Xname)
     bn = sorted(beta_name)
