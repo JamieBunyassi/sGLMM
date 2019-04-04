@@ -114,12 +114,13 @@ class sGLMM:
 
         while regMin + 1e-5 < regMax and iteration < patience:
             iteration += 1
+            print "iter: {} range: [{}, {}]".format(iteration, regMin, regMax)
+
             reg = np.exp((np.log(regMin)+np.log(regMax)) / 2.0)
             coef_ = self.runLasso(X,Y, reg)
 
             # Calculate the number of non-zero params
             k = len(np.where(coef_ != 0)[0])
-            print "iter: {} range: [{}, {}]".format(iteration, regMin, regMax)
             print "lambda:%.5f non-zeroes:%d" % (reg, k)
             ss.append((reg, k))
 

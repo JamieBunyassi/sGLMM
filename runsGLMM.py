@@ -99,7 +99,7 @@ dataGroup.add_option("-n", dest='fileName', help="name of the input file (requir
 modelGroup.add_option("--lambda", dest="lmbd", default=None, help="The weight of the penalizer. If neither lambda or snum is given, cross validation will be run.")
 modelGroup.add_option("--gamma", dest="gamma", default=0.7,
                       help="The weight of the penalizer. If neither lambda or snum is given, cross validation will be run.")
-modelGroup.add_option("--snum", dest="snum", default=None,
+modelGroup.add_option("--snum", dest="snum", default=None, type=int,
                       help="the number of targeted variables the model selects. If neither lambda or snum is given, cross validation will be run.")
 modelGroup.add_option("--threshold", dest="threshold", default=0.6,
                       help="The threshold to mask the weak genotype relatedness")
